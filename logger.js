@@ -100,6 +100,22 @@ app.post('/markers/:userId', function (req, res) {
 
 });
 
+app.get('/folder/:clientName',function(res,req){
+	var userId = db.getIdFromClientName(res.params.clientName).then(function(clientId){
+	
+		FileOrganizer.getGitFilesListOfClient(clientId).then(function(result){
+			res.send(result);
+		});
+		
+
+
+	}).catch(function(error){
+		res.send("No user by that nickname");
+	});	
+});
+
+app.use(express.static(__dirname + '/static'));
+
 var server = app.listen(50807, function () {
 
 	var host = server.address().address;

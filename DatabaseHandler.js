@@ -59,6 +59,22 @@ var DatabaseHandler = function(databaseFile){
 		var stmt = db.run("UPDATE user SET name = $name  WHERE userId= $userId;",values);
 	};
 
+	var getIdFromClientName = function(name){
+		
+		return new Promise(function(resolve,reject){
+
+			db.get("SELECT userId,name FROM user WHERE name = $name",{$name:name},function(error,rows){
+				
+				if(rows === undefined || rows.name === undefined || rows.name.length === 0){
+						reject(error);
+				}else{
+					resolve(rows.name);
+				}
+		});
+		});
+
+	};
+
 	var insertApplicationLog = function(userId,type,message){
 
 		var values = {
@@ -153,6 +169,7 @@ var DatabaseHandler = function(databaseFile){
 		insertUser:insertUser,
 		insertApplicationLog:insertApplicationLog,
 		setClientName:setClientName,
+		getIdFromClientName:getIdFromClientName,
 		fetchApplicationLog:fetchApplicationLog
 	};
 
