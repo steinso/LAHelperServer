@@ -9,10 +9,12 @@ var FileOrganizer = function(){
 		containsMarkersFile = false;
 
 		files.map(function(file){
-			file = JSON.parse(file);
-			saveFile(userId,file.filename,file.contents);
+			//file = JSON.parse(file);
+			if(file.type === 'folder' || file.typeOfChange==="removed"){return;}
+			var folder = _getFolderName(file);
+			saveFile(userId,folder, file.name,file.contents);
 
-			if(file.filename == ".markers.json"){
+			if(file.name == ".markers.json"){
 				containsMarkersFile = true;
 			}
 		});
@@ -23,7 +25,25 @@ var FileOrganizer = function(){
 		}
 	};
 
-	var saveFile = function(userid,filename,contents){
+	var _getFolderName = function(file){
+		var packageRegex = /^\t*package ([A-z]+) +;/;
+		var packageName = file.fileContents.match(packageRegex);
+		if(packageName !== null && packageName.length >0 && packageName[0] !== ""){
+			console.log("Extracted packageName:",packageName);
+			return packageName[0];
+		}
+		//Get name from path
+		var parts = file.path.split("/");
+		var parentFolder = parts[parts.length-2];
+
+		console.log("Extracted folderName:",parentFolder);
+		return parentFolder;
+		
+
+		
+	};
+
+	var saveFile = function(userid,folder,filename,contents){
 		var directoryPath = storagePath+userid;
 		//TODO: Check directory exists
 		//

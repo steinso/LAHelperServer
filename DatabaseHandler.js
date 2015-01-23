@@ -4,9 +4,10 @@ var sqlite3 = require("sqlite3").verbose();
 // Can be run in memory!
 //var db = new sqlite3.Database(':memory:');
 
-var DatabaseHandler = function(){
+//to run in memory, provide ":memory:" as databaseFile
+var DatabaseHandler = function(databaseFile){
 
-	var file = "DB.db";
+	var file = databaseFile;
 	var db = new sqlite3.Database(file);
 
 	var _constructor = function(){
@@ -29,10 +30,33 @@ var DatabaseHandler = function(){
 
 	var _createTables = function(){
 		db.serialize(function() {
-			db.run("CREATE TABLE if not exists applicationLog('id' INTEGER primary key AUTOINCREMENT,'userId' varchar(40), 'type' varchar(20), 'message' varchar(1000), 'timestamp' DATETIME DEFAULT CURRENT_TIMESTAMP)");
+			db.run("CREATE TABLE if not exists applicationLog('id' INTEGER primary key AUTOINCREMENT,'userId' varchar(40), 'type' varchar(20), 'message' varchar(2500), 'timestamp' DATETIME DEFAULT CURRENT_TIMESTAMP)");
 
-			db.run("CREATE TABLE if not exists user('id' INTEGER primary key AUTOINCREMENT,'userId' varchar(40), 'ovinger' int,'requests' int, 'creation' DATETIME DEFAULT CURRENT_TIMESTAMP)");
+			db.run("CREATE TABLE if not exists user('id' INTEGER primary key AUTOINCREMENT,'userId' varchar(40), 'name' varchar(40), 'ovinger' int,'requests' int, 'creation' DATETIME DEFAULT CURRENT_TIMESTAMP)");
 		});
+
+
+	};
+
+	var insertUser = function(userId){
+
+		var values = {
+			$userId:userId,
+		};
+
+		//We dont use prepared statements as it will be a long delay between insertions
+		var stmt = db.run("INSERT INTO user (userId,ovinger,requests) VALUES ($userId,0,0)",values);
+
+	};
+
+	var setClientName = function(clientId,name){
+
+		var values = {
+			$userId:userId,
+			$name:name
+		};
+
+		var stmt = db.run("UPDATE user SET name = $name  WHERE userId= $userId;",values);
 	};
 
 	var insertApplicationLog = function(userId,type,message){
@@ -55,11 +79,11 @@ var DatabaseHandler = function(){
 
 			_fetchApplicationLogGivenWhere(wherePart,options).then(
 				function(result){
-					resolve(result);
-				}).catch(function(error){
-					reject(error);
-				});
-			
+				resolve(result);
+			}).catch(function(error){
+				reject(error);
+			});
+
 		});
 	};
 
@@ -67,7 +91,7 @@ var DatabaseHandler = function(){
 		return new Promise(function(resolve,reject){
 			console.log("SELECT * FROM applicationLog "+whereClause);
 			db.all("SELECT * FROM applicationLog "+whereClause+";",{},function(error,rows){
-		
+
 				console.log("got",rows+error)
 				if(error!==null){reject(error);}
 				resolve(rows);
@@ -124,13 +148,25 @@ var DatabaseHandler = function(){
 	};
 
 	_constructor();
-	return{insertApplicationLog:insertApplicationLog,
-		fetchApplicationLog:fetchApplicationLog};
+
+	var publicApi = {
+		insertUser:insertUser,
+		insertApplicationLog:insertApplicationLog,
+		setClientName:setClientName,
+		fetchApplicationLog:fetchApplicationLog
+	};
+
+	//TestCode
+	publicApi.__forTesting = {_optionToCondition:_optionToCondition,_generateSQLWherePartFromOptions:_generateSQLWherePartFromOptions};
+
+	return publicApi;
 };
+/*
+   var databaseHandler = new DatabaseHandler();
+   databaseHandler.insertApplicationLog(12345,"Test","Dette er en lang melding");
+   databaseHandler.insertApplicationLog(54321,"Test","Dette er en lang melding");
+   databaseHandler.fetchApplicationLog().then(function(result){ console.log("1",result);}).catch(function(error){console.log(error);});
+   databaseHandler.fetchApplicationLog({userId:12345}).then(function(result){ console.log(2,result);}).catch(function(error){console.log(error);});
 
-var databaseHandler = new DatabaseHandler();
-databaseHandler.insertApplicationLog(12345,"Test","Dette er en lang melding");
-databaseHandler.insertApplicationLog(54321,"Test","Dette er en lang melding");
-databaseHandler.fetchApplicationLog().then(function(result){ console.log("1",result);}).catch(function(error){console.log(error);});
-databaseHandler.fetchApplicationLog({userId:12345}).then(function(result){ console.log(2,result);}).catch(function(error){console.log(error);});
-
+*/
+module.exports = DatabaseHandler;
