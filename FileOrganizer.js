@@ -70,7 +70,7 @@ var FileOrganizer = function(){
 	var _deleteFile = function(file,clientId){
 		var path = _getAndCreatePath(file,clientId);
 		var filePath = path+'/'+file.name;
-		console.log("Tryig to delete FILE",filePath);
+		console.log("Trying to delete FILE",filePath);
 		if(fs.existsSync(filePath)){
 			console.log("DELETED FILE",filePath);
 			fs.unlinkSync(filePath);
@@ -88,8 +88,6 @@ var FileOrganizer = function(){
 		}
 
 		console.log("Trying to create path",file.path,sanitizedPath);
-		console.log("segments",segments);
-
 		_createFolderTree(segments,clientId);
 
 		var path = segments.join("/");
@@ -106,7 +104,6 @@ var FileOrganizer = function(){
 			if(segment === ""){return;}
 			//Add next segment to pah each iteration
 			currentPath = currentPath+"/"+segment;
-			console.log("Trying to create folder",currentPath);
 			if(!fs.existsSync(currentPath)){
 				console.log("Created folder",currentPath);
 				fs.mkdirSync(currentPath);
@@ -198,8 +195,10 @@ var FileOrganizer = function(){
 	var getGitFilesListOfClient = function(clientId){
 		return new Promise(function(resolve,reject){
 
-			child = exec("git ls-files",{cwd:storagePath+clientId},
+			var options = {cwd:storagePath+clientId+"/"}
+			child = exec("git ls-files",options,
 					 function (error, stdout, stderr) {
+						 console.log("Ran git ls-files :",options,error,stdout,stderr)
 						 resolve(stdout);
 		});
 	});

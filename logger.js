@@ -31,12 +31,29 @@ app.post('/setClientName/:userId', function (req, res) {
 	var clientId = req.params.userId;
 	console.log("Client id:"+clientId);
 	console.log("Name:"+name);
-	if(name.match(allowedNamePattern).length == 1)	{
+
+	if(name.match(allowedNamePattern).length != null)	{
 		db.setClientName(clientId,name);
+	}else{
+		//Set empty if name is illegal
+		db.setClientName(clientId,"");
 	}
+
 	res.send("OK");
 });
 
+app.post('/setClientParticipating/:userId', function (req, res) {
+	console.log("------ Got request to set participation------");
+	var value = req.body.toString();
+	var clientId = req.params.userId;
+	console.log("Client id:"+clientId);
+	console.log("Participating:"+value);
+
+	if(value == "false" || value == "true")	{
+		db.setClientParticipating(clientId,value);
+	}
+	res.send("OK");
+});
 app.post('/errorLog/:userId',function(req,res){
 	console.log("---- Got error log ------");
 	
@@ -71,16 +88,26 @@ app.post('/files/:userId', function (req, res) {
 	console.log("==== File   : ======");
 	files.map(function(file){
 		if(file.fileContents === undefined){return;}
-		file.fileContents = "";
+		console.log(createFileRepresentation(file));
 	});
-	console.dir(files);
-	console.log("Filename: "+files[0].filename);
 
 	FileOrganizer.store(files,req.params.userId);
 
 	console.log("==== Req end: =========================");
 
 });
+
+function createFileRepresentation(file){
+	var out = "";
+	out += " { name: "+file.name+'\n';
+	out += "   path: "+file.path+'\n';
+	out += "   fileContents: "+file.fileContents.substring(0,50).replace(/\n/g, " ")+'..\n';
+	out += "   type: "+file.type+'\n';
+	out += "   typeOfChange: "+file.typeOfChange+'\n';
+	out += " }";
+
+	return out;
+}
 
 
 
@@ -96,25 +123,26 @@ app.post('/markers/:userId', function (req, res) {
 
 	console.log("==== Req end: =========================");
 
-	res.send('Hello World!');
+	res.send('OK');
 
 });
 
-app.get('/folder/:clientName',function(res,req){
-	var userId = db.getIdFromClientName(res.params.clientName).then(function(clientId){
+app.get('/folder/:clientName',function(req,res){
+	console.log(req.params.clientName,"requested folder listing");
+	db.getIdFromClientName(req.params.clientName).then(function(clientId){
 	
 		FileOrganizer.getGitFilesListOfClient(clientId).then(function(result){
-			res.send(result);
+			console.log("Folder listing sent:",result)
+			res.send(result.replace(/\n/g,"<br>"));
 		});
-		
-
 
 	}).catch(function(error){
+		console.log("Promise was rejected.. sucks",error)
 		res.send("No user by that nickname");
 	});	
 });
 
-app.use(express.static(__dirname + '/static'));
+app.use(express.static(__dirname + '/pub'));
 
 var server = app.listen(50807, function () {
 

@@ -32,10 +32,8 @@ var DatabaseHandler = function(databaseFile){
 		db.serialize(function() {
 			db.run("CREATE TABLE if not exists applicationLog('id' INTEGER primary key AUTOINCREMENT,'userId' varchar(40), 'type' varchar(20), 'message' varchar(2500), 'timestamp' DATETIME DEFAULT CURRENT_TIMESTAMP)");
 
-			db.run("CREATE TABLE if not exists user('id' INTEGER primary key AUTOINCREMENT,'userId' varchar(40), 'name' varchar(40), 'ovinger' int,'requests' int, 'creation' DATETIME DEFAULT CURRENT_TIMESTAMP)");
+			db.run("CREATE TABLE if not exists user('id' INTEGER primary key AUTOINCREMENT,'userId' varchar(40), 'name' varchar(40),'participating' varchar(6), 'ovinger' int,'requests' int, 'creation' DATETIME DEFAULT CURRENT_TIMESTAMP)");
 		});
-
-
 	};
 
 	var insertUser = function(userId){
@@ -52,23 +50,37 @@ var DatabaseHandler = function(databaseFile){
 	var setClientName = function(clientId,name){
 
 		var values = {
-			$userId:userId,
+			$clientId:clientId,
 			$name:name
 		};
 
-		var stmt = db.run("UPDATE user SET name = $name  WHERE userId= $userId;",values);
+		var stmt = db.run("UPDATE user SET name = $name  WHERE userId= $clientId;",values);
 	};
+	
+	var setClientParticipating= function(clientId,participating){
+
+		var values = {
+			$clientId:clientId,
+			$participating:participating
+		};
+
+		var stmt = db.run("UPDATE user SET participating = $participating WHERE userId= $clientId;",values);
+	};
+
 
 	var getIdFromClientName = function(name){
 		
 		return new Promise(function(resolve,reject){
 
+			console.log("Cheking db for"+name);
 			db.get("SELECT userId,name FROM user WHERE name = $name",{$name:name},function(error,rows){
+				console.log("Got result",error,rows);
 				
 				if(rows === undefined || rows.name === undefined || rows.name.length === 0){
+						console.log("Rejecting promise")
 						reject(error);
 				}else{
-					resolve(rows.name);
+					resolve(rows.userId);
 				}
 		});
 		});
