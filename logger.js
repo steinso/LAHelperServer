@@ -28,13 +28,16 @@ app.post("/createUser",function(req,res){
 app.post("/getMessage/:messageId/:userId",function(req,res){
 	
 	console.log("Got message requirest");
-	var message = "";
+	var dialogDisclaimer = "Ved å samle inn anonym data om oppgavevalg og utførelse, kan vi gjøre analyse for å identifisere spesielt vanskelige øvinger og tema.\nDette kan føre til mindre frustrasjon og mer hjelp til dere. All dataen er helt anonym og det er umulig å linke kode til individer.\n\nVed å aktivere logging samtykker du til logging av: tester som kjøres, kode som blir skrevet og feilmeldinger som oppstår.";
+
+var preferenceDisclaimer = "Ved å samle inn anonym data om oppgavevalg og utførelse, kan vi gjøre analyse for å identifisere spesielt vanskelige øvinger og tema. Dette kan føre til mindre frustrasjon og mer hjelp til dere. All data er helt anonym og det er umulig å linke informasjon til individer. \n\nVed å trykke godta samtykker du til logging av: tester som kjøres, kode som blir skrevet og feilmeldinger som oppstår.  \n\nLoggingen kan skrues av og på i instillingene, hvor det også er mulig å legge inn et kallenavn som gjør dine data tilgjengelig for studass om du skulle trenge hjelp.\n\nPå forhånd takk!\n";
+
 	if(req.params.messageId === "dialogDisclaimer"){
-		message = "This is the dialog disclaimer0.3";
+		message = dialogDisclaimer;
 	} else if(req.params.messageId === "preferenceDisclaimer"){
-		message = "This is the preference disclaimer3.1";
+		message = preferenceDisclaimer;
 	} else{
-		message = "unkownId";
+		message = "unkownIdMessageId";
 	}
 	
 	res.send(message);
