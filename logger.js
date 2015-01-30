@@ -24,6 +24,23 @@ app.post("/createUser",function(req,res){
 	res.send(clientId);
 });
 
+
+app.post("/getMessage/:messageId/:userId",function(req,res){
+	
+	console.log("Got message requirest");
+	var message = "";
+	if(req.params.messageId === "dialogDisclaimer"){
+		message = "This is the dialog disclaimer0.3";
+	} else if(req.params.messageId === "preferenceDisclaimer"){
+		message = "This is the preference disclaimer3.1";
+	} else{
+		message = "unkownId";
+	}
+	
+	res.send(message);
+
+});
+
 app.post('/setClientName/:userId', function (req, res) {
 	console.log("------ Got request to set name------");
 	var allowedNamePattern = /^[A-z0-9_]+$/;
@@ -32,7 +49,10 @@ app.post('/setClientName/:userId', function (req, res) {
 	console.log("Client id:"+clientId);
 	console.log("Name:"+name);
 
-	if(name.match(allowedNamePattern).length != null)	{
+	var validName = (name.match(allowedNamePattern) !== null 
+			      && name.match(allowedNamePattern).length > 0);
+
+	if(validName){
 		db.setClientName(clientId,name);
 	}else{
 		//Set empty if name is illegal

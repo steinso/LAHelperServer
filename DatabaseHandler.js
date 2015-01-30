@@ -181,6 +181,7 @@ var DatabaseHandler = function(databaseFile){
 		insertUser:insertUser,
 		insertApplicationLog:insertApplicationLog,
 		setClientName:setClientName,
+		setClientParticipating:setClientParticipating,
 		getIdFromClientName:getIdFromClientName,
 		fetchApplicationLog:fetchApplicationLog
 	};
