@@ -4,6 +4,7 @@ var bodyParser = require('body-parser');
 var fs = require('fs');
 var User = require('./User.js')();
 var FileOrganizer = require('./FileOrganizer.js');
+var Promise = require("es6-promise").Promise;
 
 //var sqlite3 = require("sqlite3").verbose();
 var DatabaseHandler = require('./DatabaseHandler.js');
@@ -25,12 +26,14 @@ app.post("/createUser",function(req,res){
 });
 
 
-app.post("/getMessage/:messageId/:userId",function(req,res){
+app.post("/getMessage/:messageId/:timestamp",function(req,res){
 	
 	console.log("Got message requirest");
-	var dialogDisclaimer = "Ved å samle inn anonym data om oppgavevalg og utførelse, kan vi gjøre analyse for å identifisere spesielt vanskelige øvinger og tema.\nDette kan føre til mindre frustrasjon og mer hjelp til dere. All dataen er helt anonym og det er umulig å linke kode til individer.\n\nVed å aktivere logging samtykker du til logging av: tester som kjøres, kode som blir skrevet og feilmeldinger som oppstår.";
+	var dialogDisclaimer = "Learning Analytics Helper, er et Eclipse-tillegg som skal hjelpe oss å få innsikt i hvordan det jobbes med programmeringsoppgaver, så det blir lettere å forbedre dem og gi målrettet støtte.\n LA Helper logger kontinuerlig data om hva du gjør i Eclipse og sender det anonymt til en server. Det som logges er:\n -filer du redigerer\n -problem-markører i editoren som legges inn av kompilatoren\n -hvilke tester som kjøres og test-resultatene\n\nVed å aktivere logging samtykker du til at data kan brukes til analyse av hvordan det jobbes med koding, og til forbedring av oppgaver og øvingsopplegget.\n\n Data logges anonymt, men du har anledning til å legge inn et kallenavn, som knyttes til dataene. Med dette kallenavnet har du muligheten til få innsyn i hva som er logget, og det kan brukes av oss til å gi mer personlig hjelp og støtte, hvis du ønsker det.";
+	//var dialogDisclaimer = "Ved å samle inn anonym data om oppgavevalg og utførelse, kan vi gjøre analyse for å identifisere spesielt vanskelige øvinger og tema.\nDette kan føre til mindre frustrasjon og mer hjelp til dere. All dataen er helt anonym og det er umulig å linke kode til individer.\n\nVed å aktivere logging samtykker du til logging av: tester som kjøres, kode som blir skrevet og feilmeldinger som oppstår.";
 
-var preferenceDisclaimer = "Ved å samle inn anonym data om oppgavevalg og utførelse, kan vi gjøre analyse for å identifisere spesielt vanskelige øvinger og tema. Dette kan føre til mindre frustrasjon og mer hjelp til dere. All data er helt anonym og det er umulig å linke informasjon til individer. \n\nVed å trykke godta samtykker du til logging av: tester som kjøres, kode som blir skrevet og feilmeldinger som oppstår.  \n\nLoggingen kan skrues av og på i instillingene, hvor det også er mulig å legge inn et kallenavn som gjør dine data tilgjengelig for studass om du skulle trenge hjelp.\n\nPå forhånd takk!\n";
+var preferenceDisclaimer = dialogDisclaimer;
+//var preferenceDisclaimer = "Ved å samle inn anonym data om oppgavevalg og utførelse, kan vi gjøre analyse for å identifisere spesielt vanskelige øvinger og tema. Dette kan føre til mindre frustrasjon og mer hjelp til dere. All data er helt anonym og det er umulig å linke informasjon til individer. \n\nVed å trykke godta samtykker du til logging av: tester som kjøres, kode som blir skrevet og feilmeldinger som oppstår.  \n\nLoggingen kan skrues av og på i instillingene, hvor det også er mulig å legge inn et kallenavn som gjør dine data tilgjengelig for studass om du skulle trenge hjelp.\n\nPå forhånd takk!\n";
 
 	if(req.params.messageId === "dialogDisclaimer"){
 		message = dialogDisclaimer;
@@ -56,9 +59,11 @@ app.post('/setClientName/:userId', function (req, res) {
 			      && name.match(allowedNamePattern).length > 0);
 
 	if(validName){
+		console.log("Name is valid, setting name in DB");
 		db.setClientName(clientId,name);
 	}else{
 		//Set empty if name is illegal
+		console.log("Name invalid, setting 0");
 		db.setClientName(clientId,"");
 	}
 
@@ -160,7 +165,7 @@ app.get('/folder/:clientName',function(req,res){
 		});
 
 	}).catch(function(error){
-		console.log("Promise was rejected.. sucks",error)
+		console.log("Promise was rejected..",error)
 		res.send("No user by that nickname");
 	});	
 });

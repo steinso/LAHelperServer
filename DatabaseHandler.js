@@ -1,4 +1,5 @@
 var fs = require("fs");
+var Promise = require("es6-promise").Promise;
 var sqlite3 = require("sqlite3").verbose();
 
 // Can be run in memory!
@@ -54,7 +55,10 @@ var DatabaseHandler = function(databaseFile){
 			$name:name
 		};
 
-		var stmt = db.run("UPDATE user SET name = $name  WHERE userId= $clientId;",values);
+		console.log("Setting client name for user:",clientId);
+		var stmt = db.run("UPDATE user SET name = $name  WHERE userId= $clientId;",values,function(error){
+			console.log("DB ERROR: "+error);
+			});
 	};
 	
 	var setClientParticipating= function(clientId,participating){
@@ -74,7 +78,7 @@ var DatabaseHandler = function(databaseFile){
 
 			console.log("Cheking db for"+name);
 			db.get("SELECT userId,name FROM user WHERE name = $name",{$name:name},function(error,rows){
-				console.log("Got result",error,rows);
+				console.log("Got result",error,rows," for username:",name);
 				
 				if(rows === undefined || rows.name === undefined || rows.name.length === 0){
 						console.log("Rejecting promise")

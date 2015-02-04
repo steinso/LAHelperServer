@@ -1,8 +1,9 @@
 var exec = require('child_process').exec;
+var Promise = require("es6-promise").Promise;
 var fs = require('fs');
 
 var FileOrganizer = function(){
-	var storagePath = "/home/stan/projects/errorLogger/files/";
+	var storagePath = "/srv/LAHelper/logs/";
 	var MARKERS_FILENAME = ".markers.json";
 
 	// Files is array of JSON objects
