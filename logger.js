@@ -28,7 +28,19 @@ app.post("/createUser",function(req,res){
 
 app.post("/getMessage/:messageId/:timestamp",function(req,res){
 	
-	console.log("Got message requirest");
+	var timeOfChange = 1423136100;
+	var clientTimestampOfLastUpdate = req.params.timestamp;
+
+	var timestampIsValid = clientTimestampOfLastUpdate.match(/^[0-9]+$/);
+	timestampIsValid = (clientTimestampOfLastUpdate.match(/^[0-9]+$/) !== null 
+			      && clientTimestampOfLastUpdate.match(/^[0-9]+$/).length > 0);
+	var clientIsUpToDate = timestampIsValid && timeOfChange < clientTimestampOfLastUpdate;
+
+	console.log("Got message request:"+req.params.messageId+" Client up to date: "+clientIsUpToDate +" diff: "+(timeOfChange-clientTimestampOfLastUpdate));
+	if(clientIsUpToDate){
+		res.send("OK");
+		return;
+	}
 	var dialogDisclaimer = "Learning Analytics Helper, er et Eclipse-tillegg som skal hjelpe oss å få innsikt i hvordan det jobbes med programmeringsoppgaver, så det blir lettere å forbedre dem og gi målrettet støtte.\n LA Helper logger kontinuerlig data om hva du gjør i Eclipse og sender det anonymt til en server. Det som logges er:\n -filer du redigerer\n -problem-markører i editoren som legges inn av kompilatoren\n -hvilke tester som kjøres og test-resultatene\n\nVed å aktivere logging samtykker du til at data kan brukes til analyse av hvordan det jobbes med koding, og til forbedring av oppgaver og øvingsopplegget.\n\n Data logges anonymt, men du har anledning til å legge inn et kallenavn, som knyttes til dataene. Med dette kallenavnet har du muligheten til få innsyn i hva som er logget, og det kan brukes av oss til å gi mer personlig hjelp og støtte, hvis du ønsker det.";
 	//var dialogDisclaimer = "Ved å samle inn anonym data om oppgavevalg og utførelse, kan vi gjøre analyse for å identifisere spesielt vanskelige øvinger og tema.\nDette kan føre til mindre frustrasjon og mer hjelp til dere. All dataen er helt anonym og det er umulig å linke kode til individer.\n\nVed å aktivere logging samtykker du til logging av: tester som kjøres, kode som blir skrevet og feilmeldinger som oppstår.";
 
@@ -44,7 +56,6 @@ var preferenceDisclaimer = dialogDisclaimer;
 	}
 	
 	res.send(message);
-
 });
 
 app.post('/setClientName/:userId', function (req, res) {
