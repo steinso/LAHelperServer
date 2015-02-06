@@ -1,5 +1,5 @@
 
-var Logger = function(){
+var Logger = function(clientId,msg){
 
 	var _logs = [];
 	var _msg = "";
@@ -8,15 +8,14 @@ var Logger = function(){
 		_msg = message;
 	};
 
-	var constructor = function(clientId,msg){
+	var _constructor = function(clientId,msg){
 		_timestamp = _getTimeStamp();
-		_clientId = clientId;
-		_msg = msg;
-
+		_clientId = clientId || "unknown";
+		_msg = msg || "";
 	};
 
 	var debug = function(msg){
-		var log = {type:"DEBUG",msg:msg};
+		var log = {type:"",msg:msg};
 		_logs.push(log);
 	};
 
@@ -26,7 +25,7 @@ var Logger = function(){
 	};
 
 	var print = function(){
-		console.log(_timestamp+"|"+_clientId+"|| "+_msg);
+		console.log(_timestamp+">"+_clientId.substring(0,7)+"|| "+_msg);
 		_logs.map(_printSingleLog);
 	};
 
@@ -36,9 +35,12 @@ var Logger = function(){
 	};
 
 	var _getTimeStamp = function(){
-		var t = new Date();
-		return t.getFullYear()+"-"+t.getMonth()+"-"+t.getDay()+"T"+t.getHours()+":"+t.getMinutes()+":"+t.getSeconds(); 
+		var date = new Date();
+
+		return date.toISOString(); 
 	};
+
+	_constructor(clientId,msg);
 
 	return {
 		setMessage:setMessage,
@@ -49,4 +51,4 @@ var Logger = function(){
 };
 
 
-module.exports = new Logger;
+module.exports = Logger;

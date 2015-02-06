@@ -5,7 +5,7 @@ var fs = require('fs');
 var User = require('./User.js')();
 var FileOrganizer = require('./FileOrganizer.js');
 var Promise = require("es6-promise").Promise;
-var log = require("./Logger.js");
+var Log = require("./Logger.js");
 
 //var sqlite3 = require("sqlite3").verbose();
 var DatabaseHandler = require('./DatabaseHandler.js');
@@ -22,13 +22,15 @@ app.use(bodyParser.raw());
 
 app.post("/createUser",function(req,res){
 	var clientId = User.create();	
+	var log = new Log(null," Create client: "+clientId);
 	db.insertUser(clientId);
 	res.send(clientId);
+	log.print();
 });
-
 
 app.post("/getMessage/:messageId/:timestamp",function(req,res){
 	
+	var log = new Log();
 	var timeOfChange = 1423142233;
 	var clientTimestampOfLastUpdate = req.params.timestamp;
 
@@ -37,7 +39,7 @@ app.post("/getMessage/:messageId/:timestamp",function(req,res){
 			      && clientTimestampOfLastUpdate.match(/^[0-9]+$/).length > 0);
 	var clientIsUpToDate = timestampIsValid && timeOfChange < clientTimestampOfLastUpdate;
 
-	console.log("Got message request:"+req.params.messageId+" Client up to date: "+clientIsUpToDate +" diff: "+(timeOfChange-clientTimestampOfLastUpdate));
+	log.setMessage("Message request:"+req.params.messageId+" Client up to date: "+clientIsUpToDate +" diff: "+(timeOfChange-clientTimestampOfLastUpdate));
 	if(clientIsUpToDate){
 		res.send("OK");
 		return;
@@ -55,55 +57,57 @@ var preferenceDisclaimer = dialogDisclaimer;
 	} else{
 		message = "unkownIdMessageId";
 	}
-	
+
 	res.send(message);
+	log.print();
 });
 
 app.post('/setClientName/:userId', function (req, res) {
-	console.log("------ Got request to set name------");
 	var allowedNamePattern = /^[A-z0-9_]+$/;
 	var name = req.body.toString();
 	var clientId = req.params.userId;
-	console.log("Client id:"+clientId);
-	console.log("Name:"+name);
+	var log = new Log("SetName request: "+name,clientId);
 
 	var validName = (name.match(allowedNamePattern) !== null 
 			      && name.match(allowedNamePattern).length > 0);
 
 	if(validName){
-		console.log("Name is valid, setting name in DB");
+		log.debug("Name valid, setting in DB");
 		db.setClientName(clientId,name);
 	}else{
 		//Set empty if name is illegal
-		console.log("Name invalid, setting 0");
+		log.debug("Name invalid, setting 0");
 		db.setClientName(clientId,"");
 	}
 
 	res.send("OK");
+	log.print();
 });
 
 app.post('/setClientParticipating/:userId', function (req, res) {
-	console.log("------ Got request to set participation------");
 	var value = req.body.toString();
 	var clientId = req.params.userId;
-	console.log("Client id:"+clientId);
-	console.log("Participating:"+value);
+
+	var log = new Log(clientId,"Participating: "+value);
 
 	if(value == "false" || value == "true")	{
 		db.setClientParticipating(clientId,value);
 	}
 	res.send("OK");
+	log.print();
 });
+
 app.post('/errorLog/:userId',function(req,res){
-	console.log("---- Got error log ------");
-	
+	var clientId = req.params.userId;
+	var log = new Log(clientId,"Client error log ---");
 	var errorString = req.body.toString();
 	var error = JSON.parse(errorString);
 	console.log(error);
-	var clientId = req.params.userId;
+	log.error(error);
 	db.insertApplicationLog(clientId,"error",errorString);
 
 	res.send('OK');
+	log.print();
 });
 
 
@@ -118,68 +122,55 @@ app.post('/eventLog/:userId',function(req,res){
 
 });
 
-app.post('/files/:userId', function (req, res) {
+app.post('/files/:clientId', function (req, res) {
 	res.send('OK');
-	console.log("==== Got req: FILE======================");
-	console.log("POST request at ",Date.now());
+	var clientId = req.params.clientId;
+	var log = new Log(clientId,"File request");
 
 	var body = req.body.toString();
 	var files= JSON.parse(req.body.toString());
-	console.log("==== File   : ======");
+
 	files.map(function(file){
-		console.log(createFileRepresentation(file));
+		log.debug(createFileRepresentation(file));
 	});
 
-	FileOrganizer.store(files,req.params.userId);
+	log.print();
+	FileOrganizer.store(files,clientId);
 
-	console.log("==== Req end: =========================");
 
 });
 
 function createFileRepresentation(file){
 	var out = "";
-	out += " { name: "+file.name+'\n';
-	out += "   path: "+file.path+'\n';
-	out += "   type: "+file.type+'\n';
-	out += "   typeOfChange: "+file.typeOfChange+'\n';
+	out += " { name: "+file.name;
+	out += " ,path: "+file.path;
+	out += " ,type: "+file.type;
+	out += " ,typeOfChange: "+file.typeOfChange;
 	if(file.fileContents !== undefined){
-		out += "   fileContents: "+file.fileContents.substring(0,50).replace(/\n/g, " ")+'..\n';
+		out += "   ,fileContents: "+file.fileContents.substring(0,50).replace(/\n/g, " ")+'..';
 	}
-	out += " }";
+	out += "   }";
 
 	return out;
 }
 
 
-
-app.post('/markers/:userId', function (req, res) {
-	console.log("==== Got req: MARKERS =================");
-	console.log("POST request at ",Date.now());
-	console.log("");
-	//	console.log(req.body.toString());
-
-	var markers = JSON.parse(req.body.toString());
-	console.log("==== Markers: ======");
-	console.dir(markers);
-
-	console.log("==== Req end: =========================");
-
-	res.send('OK');
-
-});
-
 app.get('/folder/:clientName',function(req,res){
-	console.log(req.params.clientName,"requested folder listing");
+	var clientName =req.params.clientName; 
+	var log = new Log(null,"Folder listing: "+clientName);
+
 	db.getIdFromClientName(req.params.clientName).then(function(clientId){
 	
 		FileOrganizer.getGitFilesListOfClient(clientId).then(function(result){
-			console.log("Folder listing sent:",result)
+			log.debug("Folder listing sent:",result);
 			res.send(result.replace(/\n/g,"<br>"));
+			log.print();
 		});
 
 	}).catch(function(error){
-		console.log("Promise was rejected..",error)
+		log.error("No user by that nickname..",error);
 		res.send("No user by that nickname");
+		log.print();
 	});	
 });
 
@@ -190,8 +181,6 @@ var server = app.listen(50807, function () {
 	var host = server.address().address;
 	var port = server.address().port;
 
-	console.log('Example app listening at http://%s:%s', host, port);
-
-
+	console.log('Learning Analytics server listening at http://%s:%s', host, port);
 });
 

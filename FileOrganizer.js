@@ -49,11 +49,12 @@ var FileOrganizer = function(){
 
 	var _deleteFolder = function(folder,clientId){
 		var path = _getAndCreatePath(folder,clientId);
-		console.log("trying to delete: ",path);
+		var result = "FAILURE";
 		if(fs.existsSync(path)){
 			//fs.rmdirSync(path);
-			console.log("DELETED DIR",path);
+			retuslt = "SUCCESS";
 		}
+		console.log("    "+result+": deleting: ",path);
 	};
 
 	var _processFile = function(file,clientId){
@@ -71,11 +72,14 @@ var FileOrganizer = function(){
 	var _deleteFile = function(file,clientId){
 		var path = _getAndCreatePath(file,clientId);
 		var filePath = path+'/'+file.name;
-		console.log("Trying to delete FILE",filePath);
+		var result = "FAILURE";
+
 		if(fs.existsSync(filePath)){
-			console.log("DELETED FILE",filePath);
+			result = "SUCCESS";
 			fs.unlinkSync(filePath);
 		}
+
+		console.log("    "+result+": deleting: ",filePath);
 	};
 
 	var _getAndCreatePath = function(file,clientId){
@@ -88,12 +92,10 @@ var FileOrganizer = function(){
 			segments.pop();
 		}
 
-		console.log("Trying to create path",file.path,sanitizedPath);
+		//console.log("    Trying to create path",file.path,sanitizedPath);
 		_createFolderTree(segments,clientId);
-
 		var path = segments.join("/");
-
-		console.log("Returned path: ",storagePath+clientId+path);
+		//console.log("    Returned path: ",storagePath+clientId+path);
 		return storagePath+clientId+path;
 	};
 
@@ -106,7 +108,7 @@ var FileOrganizer = function(){
 			//Add next segment to pah each iteration
 			currentPath = currentPath+"/"+segment;
 			if(!fs.existsSync(currentPath)){
-				console.log("Created folder",currentPath);
+				console.log("    Created folder",currentPath);
 				fs.mkdirSync(currentPath);
 			}
 		});
@@ -132,22 +134,16 @@ var FileOrganizer = function(){
 		var packageRegex = /^\t*package ([A-z]+) +;/;
 		var packageName = file.fileContents.match(packageRegex);
 		if(packageName !== null && packageName.length >0 && packageName[0] !== ""){
-			console.log("Extracted packageName:",packageName);
 			return packageName[0];
 		}
 		//Get name from path
 		var parts = file.path.split("/");
 		var parentFolder = parts[parts.length-2];
 
-		console.log("Extracted folderName:",parentFolder);
 		return parentFolder;
-
-
-
 	};
 
 	var saveFile = function(file,userid){
-		console.log("Trying to save file",file.path);
 		var directoryPath = _getAndCreatePath(file,userid);
 		//TODO: Check directory exists
 		//
@@ -155,9 +151,9 @@ var FileOrganizer = function(){
 		// Use regex to check filename.
 		fs.writeFile(filePath, file.fileContents, function(err) {
 			if(err) {
-				console.log(err);
+				console.log("    ERROR: file not saved: ",filePath,err);
 			} else {
-				console.log("File was saved: ",filePath);
+				console.log("    File saved: ",filePath);
 			}
 		}); 
 	};
@@ -168,12 +164,9 @@ var FileOrganizer = function(){
 
 		child = exec("cd "+directory+"; git init; cd "+storagePath,
 					 function (error, stdout, stderr) {
-						 console.log("Initializing directory for "+clientId);
-						 console.log('stdout: ' + stdout);
-						 console.log('stderr: ' + stderr);
+						 console.log("    Initializing directory ("+clientId,')   - stdout: ' + stdout.replace(/\n/g," / "),' - stderr: ' + stderr.replace(/\n/g," / "));
 						 if (error !== null) {
-							 console.log('exec error: ' + error);
-
+							 console.log('    exec error: ' + error);
 						 }
 					 });
 	};
@@ -182,24 +175,21 @@ var FileOrganizer = function(){
 		var directory = storagePath+clientId;
 		child = exec("cd "+directory+"; git add --all .; git commit -m \" Auto commit:  "+Date.now()+"\";cd "+directory,
 					 function (error, stdout, stderr) {
-						 console.log("performing commit for "+clientId);
-						 console.log('stdout: ' + stdout);
-						 console.log('stderr: ' + stderr);
+						 console.log("    Commit ("+clientId.substring(0,7),')  - stdout: ' + stdout.replace(/\n/g," / "),' - stderr: ' + stderr.replace(/\n/g," / "));
 						 if (error !== null) {
-							 console.log('exec error: ' + error);
+							 console.log('    exec error: ' + error);
 
 						 }
 					 });
-
 	};	
 
 	var getGitFilesListOfClient = function(clientId){
 		return new Promise(function(resolve,reject){
 
-			var options = {cwd:storagePath+clientId+"/"}
+			var options = {cwd:storagePath+clientId+"/"};
 			child = exec("git ls-files",options,
 					 function (error, stdout, stderr) {
-						 console.log("Ran git ls-files :",options,error,stdout,stderr)
+						 console.log("    Ran git ls-files :",options,error,stdout,stderr);
 						 resolve(stdout);
 		});
 	});
@@ -211,7 +201,6 @@ var FileOrganizer = function(){
 		createFileStorage:createFileStorage
 	};
 };
-
 
 
 
