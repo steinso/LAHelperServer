@@ -126,7 +126,6 @@ app.post('/files/:userId', function (req, res) {
 	var files= JSON.parse(req.body.toString());
 	console.log("==== File   : ======");
 	files.map(function(file){
-		if(file.fileContents === undefined){return;}
 		console.log(createFileRepresentation(file));
 	});
 
@@ -140,9 +139,11 @@ function createFileRepresentation(file){
 	var out = "";
 	out += " { name: "+file.name+'\n';
 	out += "   path: "+file.path+'\n';
-	out += "   fileContents: "+file.fileContents.substring(0,50).replace(/\n/g, " ")+'..\n';
 	out += "   type: "+file.type+'\n';
 	out += "   typeOfChange: "+file.typeOfChange+'\n';
+	if(file.fileContents !== undefined){
+		out += "   fileContents: "+file.fileContents.substring(0,50).replace(/\n/g, " ")+'..\n';
+	}
 	out += " }";
 
 	return out;
