@@ -12,7 +12,7 @@ var DatabaseHandler = require('./DatabaseHandler.js');
 var db = new DatabaseHandler('dbFile.db');
 FileOrganizer = FileOrganizer();
 
-app.use(bodyParser.raw());
+app.use(bodyParser.raw({limit:'1.5mb'}));
 
 
 ///////////////////////////////////
@@ -42,6 +42,7 @@ app.post("/getMessage/:messageId/:timestamp",function(req,res){
 	log.setMessage("Message request:"+req.params.messageId+" Client up to date: "+clientIsUpToDate +" diff: "+(timeOfChange-clientTimestampOfLastUpdate));
 	if(clientIsUpToDate){
 		res.send("OK");
+		log.print();
 		return;
 	}
 	var dialogDisclaimer = "Learning Analytics Helper, er et Eclipse-tillegg som skal hjelpe oss å få innsikt i hvordan det jobbes med programmeringsoppgaver, så det blir lettere å forbedre dem og gi målrettet støtte.\nLA Helper logger kontinuerlig data om hva du gjør i Eclipse og sender det anonymt til en server. Det som logges er:\n-filer du redigerer\n-problem-markører i editoren som legges inn av kompilatoren\n-hvilke tester som kjøres og test-resultatene\n\nVed å aktivere logging samtykker du til at data kan brukes til analyse av hvordan det jobbes med koding, og til forbedring av oppgaver og øvingsopplegget.\n\nData logges anonymt, men du har anledning til å legge inn et kallenavn, som knyttes til dataene. Med dette kallenavnet har du muligheten til få innsyn i hva som er logget, og det kan brukes av oss til å gi mer personlig hjelp og støtte, hvis du ønsker det.";
