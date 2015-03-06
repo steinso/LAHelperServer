@@ -14,7 +14,7 @@ var DatabaseHandler = require('./DatabaseHandler.js');
 var db = new DatabaseHandler('dbFile.db');
 FileOrganizer = FileOrganizer();
 
-app.use(bodyParser.raw({limit:'1mb'}));
+app.use(bodyParser.raw({limit:'1.5mb'}));
 
 //Lib for processing command line arguments
 var argv = require('minimist')(process.argv.slice(2));
@@ -52,6 +52,7 @@ app.post("/getMessage/:messageId/:timestamp",function(req,res){
 	log.setMessage("Message request:"+req.params.messageId+" Client up to date: "+clientIsUpToDate +" diff: "+(timeOfChange-clientTimestampOfLastUpdate));
 	if(clientIsUpToDate){
 		res.send("OK");
+		log.print();
 		return;
 	}
 	var message;
