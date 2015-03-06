@@ -13,7 +13,7 @@ var FileOrganizer = function(){
 
 		_processFilesAndFolders(files,userId);
 
-		_performCommitIfMarkers(files,userId);
+		_performCommit(userId);
 	};
 
 	var _ensureUserFolderCreated = function(userId){
@@ -115,19 +115,18 @@ var FileOrganizer = function(){
 
 	};
 
-	var _performCommitIfMarkers = function(files,clientId){
-
-		if(_containsMarkersFile(files)){
+	var _performCommit= function(clientId){
 			saveState(clientId);	
-		}
 	};
 	var _containsMarkersFile = function(files){
-		return files.reduce(function(file,out){
+		var containsMarkers = false; 
+		files.map(function(file){
 			if(file.name == MARKERS_FILENAME){
-				out = true;
+				containsMarkers = true;
 			} 
-			return out;
-		},false);
+		});
+
+		return containsMarkers;
 	};
 
 	var _getFolderName = function(file){
