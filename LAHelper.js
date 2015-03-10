@@ -3,16 +3,8 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var request = require("request");
-var fs = require('fs');
-var User = require('./User.js')();
-var FileOrganizer = require('./FileOrganizer.js');
 var Promise = require("es6-promise").Promise;
 var Log = require("./Logger.js");
-
-//var sqlite3 = require("sqlite3").verbose();
-var DatabaseHandler = require('./DatabaseHandler.js');
-var db = new DatabaseHandler('dbFile.db');
-FileOrganizer = FileOrganizer();
 
 app.use(bodyParser.raw({limit:'1.5mb'}));
 
