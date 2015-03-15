@@ -24,6 +24,10 @@ app.post("/createUser", function(req, res){
 	var url = LA_STORE_URL+"/client";
 
 	request.post(url, function(error, response, body){
+		if(error !== null){
+			log.error("API Error: " + error);
+		}
+
 		log.debug(body);
 		log.print();
 		res.send(body);
@@ -41,7 +45,9 @@ app.post("/getMessage/:messageId/:timestamp",function(req,res){
 			      && clientTimestampOfLastUpdate.match(/^[0-9]+$/).length > 0);
 	var clientIsUpToDate = timestampIsValid && timeOfChange < clientTimestampOfLastUpdate;
 
-	log.setMessage("Message request:"+req.params.messageId+" Client up to date: "+clientIsUpToDate +" diff: "+(timeOfChange-clientTimestampOfLastUpdate));
+	log.setMessage("Message request:"+req.params.messageId);
+	log.debug("Client up to date: "+clientIsUpToDate +" diff: "+(timeOfChange-clientTimestampOfLastUpdate));
+
 	if(clientIsUpToDate){
 		res.send("OK");
 		log.print();
@@ -83,20 +89,43 @@ app.post('/setClientName/:userId', function (req, res) {
 
 });
 
-app.post('/setClientParticipating/:userId', function (req, res) {
-	var url = LA_STORE_URL+"/client/participating";
+app.post("/setClientParticipating/:userId", function (req, res) {
+	var url = LA_STORE_URL + "/client/participating";
 
 	var value = req.body.toString();
 	var clientId = req.params.userId;
-	var info = {participating:value,clientId:clientId};
-	var log = new Log(clientId,"Set client participating---",info,req.body);
+	var info = {participating: value, clientId: clientId};
+	var log = new Log(clientId, "Set client participating: " + req.body);
+	log.debug(JSON.stringify(info));
 
-	request({url:url,method:"POST",body:info,json:true}, function(error, response, body){
-		log.debug(body);
-		log.debug("error: "+error);
+	request({url: url, method: "POST", body: info, json: true}, function(error, response, body){
+		log.debug("API Response: " + JSON.stringify(body));
+		if(error !== null){
+			log.debug("error: " + error);
+		}
 		log.print();
 		res.send("OK");
 	});
+});
+
+app.post("/errorLog",function(req, res){
+	var log = new Log("unkown", "Error log");
+	var url = LA_STORE_URL + "/errorLog";
+	var errorString = req.body.toString();
+	var info = {clientId: "unkown", log: errorString};
+
+	log.error(errorString);
+
+	request({url: url, method: "POST", body: info, json: true}, function(error, response, body){
+		log.debug(body);
+
+		if(error !== null){
+			log.debug("API error: " + error);
+		}
+		log.print();
+		res.send("OK");
+	});
+
 });
 
 app.post('/errorLog/:userId',function(req,res){
@@ -144,6 +173,10 @@ app.post('/files/:clientId', function (req, res) {
 	var files= JSON.parse(req.body.toString());
 	var info= {clientId: clientId, files: files};
 	var log = new Log(clientId,"File request");
+	var filesSent = files.map(function(file){
+		return file.name;
+	})
+	log.debug(filesSent);
 
 	request({url:url,method:"POST",body:info,json:true}, function(error, response, body){
 		if(error != null){
