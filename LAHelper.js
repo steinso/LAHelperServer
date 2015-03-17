@@ -73,16 +73,18 @@ var preferenceDisclaimer = dialogDisclaimer;
 });
 
 app.post('/setClientName/:userId', function (req, res) {
-	var log = new Log("SetName request: "+name,clientId);
-	var url =LA_STORE_URL+"/client/name";
-
 	var name = req.body.toString();
 	var clientId = req.params.userId;
+
+	var log = new Log(clientId,"SetName request: "+name);
+	var url =LA_STORE_URL+"/client/name";
+
 	var info = {name:name,clientId:clientId};
 
 	request({url:url,method:"POST",body:info,json:true}, function(error, response, body){
-		log.debug(body);
-		log.debug("error: "+error);
+		if(error !== null){
+			log.debug("error: "+error);
+		}
 		log.print();
 		res.send("OK");
 	});
